@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A/B Test Results: Coupon Impact Analysis</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #5a5a5a;
+    --border: #e5e2dc;
+    --accent: #2d5a27;
+    --accent-light: #e8f0e6;
+    --red: #a83232;
+    --red-light: #fdf0f0;
+    --blue: #2a4a7f;
+    --blue-light: #eef2f9;
+    --gold: #8a6d2b;
+    --gold-light: #fdf8ec;
+    --sig3: #1a6b1a;
+    --sig2: #2d7a2d;
+    --sig1: #4a8f4a;
+    --ns: #999;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: 'Source Serif 4', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  h2 {
+    font-family: 'Source Serif 4', serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 2.5rem 0 0.8rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  h2 .step-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    background: var(--accent);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1.8rem 0 0.6rem;
+    color: var(--text-secondary);
+  }
+
+  p, li {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+  }
+
+  thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    padding: 0.6rem 0.8rem;
+    text-align: right;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+
+  thead th:first-child { text-align: left; }
+
+  tbody td {
+    padding: 0.55rem 0.8rem;
+    text-align: right;
+    border-bottom: 1px solid #f0eeea;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+  }
+
+  tbody td:first-child {
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .sig { color: var(--sig3); font-weight: 600; }
+  .sig-2 { color: var(--sig2); font-weight: 600; }
+  .sig-1 { color: var(--sig1); font-weight: 600; }
+  .ns { color: var(--ns); }
+  .negative { color: var(--red); }
+
+  .sig-legend {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .finding-box {
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+    background: var(--accent-light);
+    border-radius: 0 6px 6px 0;
+  }
+
+  .finding-box.warning {
+    border-left-color: var(--gold);
+    background: var(--gold-light);
+  }
+
+  .finding-box.insight {
+    border-left-color: var(--blue);
+    background: var(--blue-light);
+  }
+
+  .finding-box p {
+    color: var(--text);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .finding-box strong {
+    color: var(--text);
+  }
+
+  .conclusion-section {
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .conclusion-section h2 {
+    margin-top: 0;
+  }
+
+  .rec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .rec-card {
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .rec-card.launch { background: var(--accent-light); border-color: var(--accent); }
+  .rec-card.caution { background: var(--gold-light); border-color: var(--gold); }
+
+  .rec-card h4 {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .rec-card p {
+    font-size: 0.82rem;
+    margin: 0;
+  }
+
+  .funnel-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    margin: 1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  .funnel-visual .arrow { color: var(--accent); font-weight: 700; }
+  .funnel-visual .stage {
+    background: var(--accent-light);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<h1>A/B Test Results: The Impact of Coupons on the Visit-to-Purchase Funnel</h1>
+<p class="subtitle">Based on <a href="https://doi.org/10.1287/mksc.2020.1232" target="_blank" style="color:var(--accent);text-decoration:underline;">Gopalakrishnan & Park (2021)</a> · n = 12,959 customers · 5 experimental conditions</p>
+
+
+<!-- ============================================================ -->
+<!-- TABLE 2: CORE METRICS -->
+<!-- ============================================================ -->
+
+<h2><span class="step-badge">TABLE 2</span> Customer Purchase: Core Metrics</h2>
+
+<h3>Panel A: Low-Value Segment</h3>
+<div class="card">
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>T1L (Base Coupon)</th>
+      <th>CGL (Control)</th>
+      <th>Difference</th>
+      <th>p-value</th>
+      <th>Sig.</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Purchase Rate (%)</td>
+      <td>2.57</td>
+      <td>1.00</td>
+      <td>+1.57 pp</td>
+      <td class="sig">6.15e-05</td>
+      <td class="sig">***</td>
+    </tr>
+    <tr>
+      <td>Redeem Rate (%)</td>
+      <td>0.52</td>
+      <td>0.00</td>
+      <td>+0.52 pp</td>
+      <td class="sig-2">0.0026</td>
+      <td class="sig-2">**</td>
+    </tr>
+    <tr>
+      <td>ARPC ($)</td>
+      <td>0.71</td>
+      <td>0.26</td>
+      <td>+$0.46</td>
+      <td class="sig">2.02e-07</td>
+      <td class="sig">***</td>
+    </tr>
+    <tr>
+      <td>ARPB ($)</td>
+      <td>27.82</td>
+      <td>25.89</td>
+      <td>+$1.93</td>
+      <td class="ns">0.146</td>
+      <td class="ns">n.s.</td>
+    </tr>
+  </tbody>
+</table>
+<p class="sig-legend">*** p &lt; 0.001 &nbsp; ** p &lt; 0.01 &nbsp; * p &lt; 0.05 &nbsp; n.s. = not significant</p>
+</div>
+
+<div class="finding-box">
+  <p><strong>Finding:</strong> The base coupon led to a significant increase in purchase rate (+1.57pp, a relative lift of 157%) and ARPC (+$0.46). Yet the redemption rate was only 0.52%. In other words, only about 20% of purchasers actually used the coupon. Most of the lift came from customers who purchased without redeeming. ARPB was not statistically different between the two groups, which means that spending per buyer did not change under the coupon.</p>
+</div>
+
+
+<h3>Panel B: High-Value Segment</h3>
+<div class="card">
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>T1H (Base)</th>
+      <th>T2H (Better)</th>
+      <th>CGH (Control)</th>
+      <th>T1H−CGH (p)</th>
+      <th>T2H−CGH (p)</th>
+      <th>T2H−T1H (p)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Purchase (%)</td>
+      <td>6.64</td>
+      <td>9.34</td>
+      <td>4.24</td>
+      <td class="sig-1">+2.40pp (0.020)*</td>
+      <td class="sig">+5.10pp (<0.001)***</td>
+      <td class="sig">+2.70pp (<0.001)***</td>
+    </tr>
+    <tr>
+      <td>Redeem (%)</td>
+      <td>0.83</td>
+      <td>2.06</td>
+      <td>0.00</td>
+      <td class="sig-1">+0.83pp (0.021)*</td>
+      <td class="sig">+2.06pp (<0.001)***</td>
+      <td class="sig">+1.23pp (<0.001)***</td>
+    </tr>
+    <tr>
+      <td>ARPC ($)</td>
+      <td>2.50</td>
+      <td>2.98</td>
+      <td>1.48</td>
+      <td class="sig-2">+$1.02 (0.002)**</td>
+      <td class="sig">+$1.50 (<0.001)***</td>
+      <td class="ns">+$0.48 (0.076) n.s.</td>
+    </tr>
+    <tr>
+      <td>ARPB ($)</td>
+      <td>37.69</td>
+      <td>31.90</td>
+      <td>34.96</td>
+      <td class="sig-2">+$2.74 (0.004)**</td>
+      <td class="sig negative">−$3.06 (<0.001)***</td>
+      <td class="sig negative">−$5.79 (<0.001)***</td>
+    </tr>
+  </tbody>
+</table>
+<p class="sig-legend">*** p &lt; 0.001 &nbsp; ** p &lt; 0.01 &nbsp; * p &lt; 0.05 &nbsp; n.s. = not significant</p>
+</div>
+
+<div class="finding-box">
+  <p><strong>Finding:</strong> Both coupons significantly lifted purchase rate and ARPC for the high-value segment. The better coupon generated a higher purchase rate than the base coupon (+2.70pp). However, the ARPC difference between the two coupons ($0.48) was not statistically significant (p=0.076). We also find that the better coupon resulted in a significantly lower ARPB ($31.90 vs $37.69). This suggests that the deeper discount brought in more buyers, but those buyers spent less per transaction on average.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- TABLE 3: FUNNEL DECOMPOSITION -->
+<!-- ============================================================ -->
+
+<h2><span class="step-badge">TABLE 3</span> Visit-to-Purchase Funnel Decomposition</h2>
+
+<div class="funnel-visual">
+  <span class="stage">All Customers</span>
+  <span class="arrow">→</span>
+  <span class="stage">Visit</span>
+  <span class="arrow">→</span>
+  <span class="stage">Search (Pageviews)</span>
+  <span class="arrow">→</span>
+  <span class="stage">Purchase</span>
+</div>
+
+<h3>Panel A: Low-Value Segment</h3>
+<div class="card">
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>T1L</th>
+      <th>CGL</th>
+      <th>Difference</th>
+      <th>p-value</th>
+      <th>Sig.</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Visit Rate (%), unconditional</td>
+      <td>34.64</td>
+      <td>10.61</td>
+      <td>+24.03 pp</td>
+      <td class="sig">&lt;2.2e-16</td>
+      <td class="sig">***</td>
+    </tr>
+    <tr>
+      <td>Pageviews | Visit</td>
+      <td>10.08</td>
+      <td>13.14</td>
+      <td class="negative">−3.06</td>
+      <td class="sig">&lt;2.2e-16</td>
+      <td class="sig">***</td>
+    </tr>
+    <tr>
+      <td>Purchase Rate | Visit (%)</td>
+      <td>7.42</td>
+      <td>9.43</td>
+      <td>−2.01 pp</td>
+      <td class="ns">0.367</td>
+      <td class="ns">n.s.</td>
+    </tr>
+    <tr>
+      <td>Discount | Purchase (%)</td>
+      <td>30.87</td>
+      <td>35.38</td>
+      <td class="negative">−4.51 pp</td>
+      <td class="sig"><0.001</td>
+      <td class="sig">***</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="finding-box insight">
+  <p><strong>Key Insight:</strong> The main effect of the base coupon on the low-value segment was a large increase in visit rate (+24pp, a 226% relative lift). Visitors in T1L viewed fewer pages than those in the control group (10.08 vs 13.14). This may suggest that the coupon attracted some less engaged customers. However, purchase conversion among visitors was not significantly different between the two groups (7.42% vs 9.43%, p=0.367). Because conversion held steady while more customers visited, the overall purchase rate increased.</p>
+</div>
+
+
+<h3>Panel B: High-Value Segment</h3>
+<div class="card">
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>T1H</th>
+      <th>T2H</th>
+      <th>CGH</th>
+      <th>T1H−CGH (p)</th>
+      <th>T2H−CGH (p)</th>
+      <th>T2H−T1H (p)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Visit Rate (%)</td>
+      <td>44.63</td>
+      <td>44.17</td>
+      <td>22.72</td>
+      <td class="sig">+21.91pp (***)</td>
+      <td class="sig">+21.45pp (***)</td>
+      <td class="ns">−0.46pp (0.766)</td>
+    </tr>
+    <tr>
+      <td>Pageviews | Visit</td>
+      <td>14.92</td>
+      <td>15.99</td>
+      <td>16.18</td>
+      <td class="sig">−1.25 (***)</td>
+      <td class="ns">−0.18 (0.554)</td>
+      <td class="sig">+1.07 (***)</td>
+    </tr>
+    <tr>
+      <td>Purchase | Visit (%)</td>
+      <td>14.88</td>
+      <td>21.16</td>
+      <td>18.68</td>
+      <td class="ns">−3.80pp (0.241)</td>
+      <td class="ns">+2.48pp (0.497)</td>
+      <td class="sig">+6.27pp (***)</td>
+    </tr>
+    <tr>
+      <td>Discount | Purchase (%)</td>
+      <td>31.46</td>
+      <td>33.64</td>
+      <td>30.69</td>
+      <td class="ns">+0.77pp (0.400)</td>
+      <td class="sig">+2.96pp (***)</td>
+      <td class="sig-2">+2.19pp (0.003)**</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="finding-box insight">
+  <p><strong>Key Insight:</strong> Both coupons increased visit rate by about 22pp for the high-value segment. This lift was similar in size to the low-value segment. The better coupon (T2H) did not generate more visits than the base coupon (p=0.766). Instead, the better coupon led to a higher purchase conversion rate among visitors (21.16% vs 14.88%, p&lt;0.001). This finding suggests that the deeper discount did not bring in more traffic. Rather, it helped convert visitors into buyers at a higher rate.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- FUNNEL SUMMARY -->
+<!-- ============================================================ -->
+
+<h2><span class="step-badge">SUMMARY</span> Funnel Decomposition: Purchase = Visit × Conversion</h2>
+
+<div class="card">
+<table>
+  <thead>
+    <tr>
+      <th>Group</th>
+      <th>N</th>
+      <th>Visit Rate</th>
+      <th>× Conversion | Visit</th>
+      <th>= Purchase Rate</th>
+      <th>ARPC ($)</th>
+      <th>Redeem Rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CGL (Control, Low)</td>
+      <td>1,998</td>
+      <td>10.61%</td>
+      <td>9.43%</td>
+      <td>1.00%</td>
+      <td>0.26</td>
+      <td>0.00%</td>
+    </tr>
+    <tr>
+      <td>T1L (Base, Low)</td>
+      <td>4,787</td>
+      <td>34.64%</td>
+      <td>7.42%</td>
+      <td>2.57%</td>
+      <td>0.71</td>
+      <td>0.52%</td>
+    </tr>
+    <tr style="border-top: 2px solid #e5e2dc;">
+      <td>CGH (Control, High)</td>
+      <td>801</td>
+      <td>22.72%</td>
+      <td>18.68%</td>
+      <td>4.24%</td>
+      <td>1.48</td>
+      <td>0.00%</td>
+    </tr>
+    <tr>
+      <td>T1H (Base, High)</td>
+      <td>1,927</td>
+      <td>44.63%</td>
+      <td>14.88%</td>
+      <td>6.64%</td>
+      <td>2.50</td>
+      <td>0.83%</td>
+    </tr>
+    <tr>
+      <td>T2H (Better, High)</td>
+      <td>3,446</td>
+      <td>44.17%</td>
+      <td>21.16%</td>
+      <td>9.34%</td>
+      <td>2.98</td>
+      <td>2.06%</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- REGRESSION RESULTS -->
+<!-- ============================================================ -->
+
+<h2><span class="step-badge">REGRESSION</span> Linear Model Results (lm)</h2>
+
+<div class="card">
+<h3>Interaction Model: amount ~ treatment × segment (base coupon only)</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Coefficient</th>
+      <th>Estimate</th>
+      <th>Std. Error</th>
+      <th>t-value</th>
+      <th>p-value</th>
+      <th>Interpretation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>(Intercept)</td>
+      <td>1.484</td>
+      <td>0.206</td>
+      <td>7.20</td>
+      <td class="sig">&lt;0.001***</td>
+      <td style="font-family:'DM Sans';font-size:0.8rem;text-align:left;">Baseline ARPC for high-value control</td>
+    </tr>
+    <tr>
+      <td>treatment: base_coupon</td>
+      <td>1.020</td>
+      <td>0.245</td>
+      <td>4.16</td>
+      <td class="sig">&lt;0.001***</td>
+      <td style="font-family:'DM Sans';font-size:0.8rem;text-align:left;">Coupon effect for high-value customers</td>
+    </tr>
+    <tr>
+      <td>segment: low</td>
+      <td>−1.225</td>
+      <td>0.244</td>
+      <td>−5.02</td>
+      <td class="sig">&lt;0.001***</td>
+      <td style="font-family:'DM Sans';font-size:0.8rem;text-align:left;">Low-value customers spend $1.22 less at baseline</td>
+    </tr>
+    <tr>
+      <td>treatment × segment (interaction)</td>
+      <td>−0.564</td>
+      <td>0.290</td>
+      <td>−1.95</td>
+      <td class="ns">0.052</td>
+      <td style="font-family:'DM Sans';font-size:0.8rem;text-align:left;">Coupon effect is marginally weaker for low-value</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="finding-box warning">
+  <p><strong>Interpretation:</strong> The interaction term (p=0.052) is close to the conventional significance threshold. This result suggests that the base coupon may have a somewhat smaller effect on ARPC for low-value customers ($0.46) than for high-value customers ($1.02). However, we cannot say this difference is statistically meaningful at the 5% level. The funnel analysis helps explain why: the high-value segment has a higher baseline conversion rate. So the same increase in visits produces a larger revenue lift for the high-value segment. The coupon itself does not appear to work differently across segments.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CONCLUSIONS -->
+<!-- ============================================================ -->
+
+<div class="conclusion-section">
+  <h2><span class="step-badge">STEP 5</span> Business Conclusions & Recommendations</h2>
+
+  <h3>1. Coupons are effective, and the lift is mostly from non-redeemers</h3>
+  <p>Both coupon types significantly increased ARPC across all segments. Only about 20% of purchasers redeemed the coupon. The rest of the revenue lift came from customers who bought without using the coupon. This pattern is consistent with coupons serving as an advertising tool rather than a price discrimination mechanism. The coupon brought customers to the website, and many of them purchased using other storewide promotions instead.</p>
+
+  <h3>2. The coupon works mainly by driving website visits</h3>
+  <p>Visit rates increased by 22 to 24 percentage points across all segments. This represents a relative increase of over 200%. At the same time, purchase conversion among visitors did not significantly decline. This means the coupon attracted visitors who were about as likely to buy as those who visited without a coupon. More customers came to the website, and the quality of those visitors held steady.</p>
+
+  <h3>3. A deeper discount does not increase visits, but it does increase conversion</h3>
+  <p>The better coupon ($10 off) and the base coupon ($7 off) produced nearly identical visit rates for the high-value segment (p=0.766). The difference between the two coupons was in purchase conversion among visitors (21.16% vs 14.88%). The extra $3 in discount depth did not generate additional traffic. It did, however, help more visitors complete a purchase.</p>
+
+  <h3>4. Margin impact is limited for the base coupon but larger for the better coupon</h3>
+  <p>Under the base coupon, discount rates were not significantly different from the control group. This means there was little margin erosion. Under the better coupon, the discount rate was modestly higher (+2.96pp vs control, p&lt;0.001) and ARPB was lower ($31.90 vs $34.96). The firm gains higher volume but accepts slightly lower margins per transaction.</p>
+
+  <div class="rec-grid">
+    <div class="rec-card launch">
+      <h4>✅ Recommendation: Launch the base coupon to both segments</h4>
+      <p>The base coupon produced a significant lift in ARPC with little margin erosion. The effect was consistent across both segments. Because most buyers did not redeem the coupon, the cost to the firm is low relative to the revenue gained.</p>
+    </div>
+    <div class="rec-card caution">
+      <h4>⚠️ Recommendation: Evaluate the better coupon further before scaling</h4>
+      <p>The better coupon increased conversion but also raised the redemption rate and lowered ARPB. The incremental ARPC gain over the base coupon ($0.48) was not statistically significant (p=0.076). A cost-benefit analysis is needed to determine whether the extra discount cost per redeemer is justified. Testing intermediate discount depths ($8 to $9) may also be worth considering.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
