@@ -3,6 +3,7 @@
 A replication and analysis of a randomized field experiment on coupon effectiveness in e-commerce, based on Gopalakrishnan & Park (2021), *Marketing Science*.
 
 🔗 **[View the live report](https://shiwenzhang00.github.io/Coupon-AB-Test-Funnel)**
+
 📄 **Original paper:** [The Impact of Coupons on the Visit-to-Purchase Funnel](https://doi.org/10.1287/mksc.2020.1232)
 
 ## Overview
